@@ -3,9 +3,10 @@
 # No need to contact NBA API to test
 
 import pandas as pd
-import pytest 
+import pytest
 
 from courtside.coverage import build_coverage_report
+
 
 def make_game_logs() -> pd.DataFrame:
     """Create sample game logs for testing"""
