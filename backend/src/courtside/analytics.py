@@ -1,4 +1,3 @@
-
 """Analytics functions for historical NBA game data."""
 
 import pandas as pd
@@ -22,9 +21,7 @@ def calculate_team_performance(
     missing_columns = required_columns.difference(df.columns)
 
     if missing_columns:
-        raise ValueError(
-            f"Missing required columns: {sorted(missing_columns)}"
-        )
+        raise ValueError(f"Missing required columns: {sorted(missing_columns)}")
 
     season_df = df.loc[df["SEASON"] == season].copy()
 
@@ -47,17 +44,11 @@ def calculate_team_performance(
         raise ValueError("Each game must contain exactly two teams.")
 
     # Calculate points allowed using the opposing team's score.
-    points_by_game = season_df[
-        ["GAME_ID", "TEAM_ID", "PTS"]
-    ].copy()
+    points_by_game = season_df[["GAME_ID", "TEAM_ID", "PTS"]].copy()
 
-    game_totals = points_by_game.groupby("GAME_ID")["PTS"].transform(
-        "sum"
-    )
+    game_totals = points_by_game.groupby("GAME_ID")["PTS"].transform("sum")
 
-    points_by_game["PTS_ALLOWED"] = (
-        game_totals - points_by_game["PTS"]
-    )
+    points_by_game["PTS_ALLOWED"] = game_totals - points_by_game["PTS"]
 
     season_df = season_df.merge(
         points_by_game[["GAME_ID", "TEAM_ID", "PTS_ALLOWED"]],
@@ -66,21 +57,16 @@ def calculate_team_performance(
         validate="one_to_one",
     )
 
-    performance = (
-        season_df.groupby(["TEAM_ID", "TEAM_NAME"], as_index=False)
-        .agg(
-            GP=("GAME_ID", "nunique"),
-            W=("WL", lambda values: (values == "W").sum()),
-            L=("WL", lambda values: (values == "L").sum()),
-            PTS=("PTS", "mean"),
-            PTS_ALLOWED=("PTS_ALLOWED", "mean"),
-        )
+    performance = season_df.groupby(["TEAM_ID", "TEAM_NAME"], as_index=False).agg(
+        GP=("GAME_ID", "nunique"),
+        W=("WL", lambda values: (values == "W").sum()),
+        L=("WL", lambda values: (values == "L").sum()),
+        PTS=("PTS", "mean"),
+        PTS_ALLOWED=("PTS_ALLOWED", "mean"),
     )
 
     performance["WIN_PCT"] = performance["W"] / performance["GP"]
-    performance["POINT_DIFF"] = (
-        performance["PTS"] - performance["PTS_ALLOWED"]
-    )
+    performance["POINT_DIFF"] = performance["PTS"] - performance["PTS_ALLOWED"]
 
     performance["PTS"] = performance["PTS"].round(2)
     performance["PTS_ALLOWED"] = performance["PTS_ALLOWED"].round(2)
@@ -115,9 +101,7 @@ def calculate_season_summary(df: pd.DataFrame) -> pd.DataFrame:
         game_scores = season_df.groupby("GAME_ID")["PTS"].sum()
 
         # Identify the highest-scoring team by average points per game.
-        highest_scoring_team = team_performance.loc[
-            team_performance["PTS"].idxmax()
-        ]
+        highest_scoring_team = team_performance.loc[team_performance["PTS"].idxmax()]
 
         # Team performance is already sorted by win percentage
         # and point differential.
@@ -139,6 +123,7 @@ def calculate_season_summary(df: pd.DataFrame) -> pd.DataFrame:
 
     return pd.DataFrame(summaries)
 
+
 def compare_seasons(
     df: pd.DataFrame,
     season_a: str,
@@ -155,17 +140,11 @@ def compare_seasons(
 
     for season in [season_a, season_b]:
         if season not in available_seasons:
-            raise ValueError(
-                f"No game data available for season {season}."
-            )
+            raise ValueError(f"No game data available for season {season}.")
 
-    summary_a = summaries.loc[
-        summaries["SEASON"] == season_a
-    ].iloc[0]
+    summary_a = summaries.loc[summaries["SEASON"] == season_a].iloc[0]
 
-    summary_b = summaries.loc[
-        summaries["SEASON"] == season_b
-    ].iloc[0]
+    summary_b = summaries.loc[summaries["SEASON"] == season_b].iloc[0]
 
     metrics = [
         "TOTAL_GAMES",
@@ -183,11 +162,7 @@ def compare_seasons(
 
         difference = value_b - value_a
 
-        pct_change = (
-            (difference / value_a) * 100
-            if value_a != 0
-            else pd.NA
-        )
+        pct_change = (difference / value_a) * 100 if value_a != 0 else pd.NA
 
         comparisons.append(
             {
@@ -197,15 +172,12 @@ def compare_seasons(
                 "SEASON_B": season_b,
                 "VALUE_B": value_b,
                 "DIFFERENCE": round(difference, 2),
-                "PCT_CHANGE": (
-                    round(pct_change, 2)
-                    if pd.notna(pct_change)
-                    else pd.NA
-                ),
+                "PCT_CHANGE": (round(pct_change, 2) if pd.notna(pct_change) else pd.NA),
             }
         )
 
     return pd.DataFrame(comparisons)
+
 
 def calculate_era_adjusted_team_performance(
     df: pd.DataFrame,
@@ -216,20 +188,16 @@ def calculate_era_adjusted_team_performance(
     performance = calculate_team_performance(df, season)
 
     league_average = df.loc[
-    df["SEASON"] == season,
-    "PTS",
+        df["SEASON"] == season,
+        "PTS",
     ].mean()
 
     performance["LEAGUE_AVG_PTS"] = round(league_average, 2)
 
     # Scoring Index = (Team PPG / League Average PPG) * 100
-    performance["PTS_INDEX"] = (
-        performance["PTS"] / league_average * 100
-    ).round(2)
+    performance["PTS_INDEX"] = (performance["PTS"] / league_average * 100).round(2)
 
-    performance["PTS_ABOVE_LEAGUE_AVG"] = (
-        performance["PTS"] - league_average
-    ).round(2)
+    performance["PTS_ABOVE_LEAGUE_AVG"] = (performance["PTS"] - league_average).round(2)
 
     league_average_allowed = performance["PTS_ALLOWED"].mean()
 
@@ -249,8 +217,7 @@ def calculate_era_adjusted_team_performance(
 
     # ERA STRENGTH INDEX = (PTS_INDEX + DEF_INDEX) / 2
     performance["ERA_STRENGTH"] = (
-        performance["PTS_INDEX"] + performance["DEF_INDEX"]
-    ).div(2).round(2)
+        (performance["PTS_INDEX"] + performance["DEF_INDEX"]).div(2).round(2)
+    )
 
     return performance
-

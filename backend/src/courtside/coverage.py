@@ -1,4 +1,4 @@
-"""Generate historical NBA statistical coverage """
+"""Generate historical NBA statistical coverage"""
 
 from pathlib import Path
 
@@ -26,9 +26,7 @@ def build_coverage_report(df: pd.DataFrame) -> pd.DataFrame:
     missing = required_columns.difference(df.columns)
 
     if missing:
-        raise ValueError(
-            f"Missing required columns: {sorted(missing)}"
-        )
+        raise ValueError(f"Missing required columns: {sorted(missing)}")
 
     df = df.copy()
 
@@ -66,15 +64,11 @@ def build_coverage_report(df: pd.DataFrame) -> pd.DataFrame:
 
         for column in sorted(OPTIONAL_STAT_COLUMNS):
             if column in season_df.columns:
-                available_records = int(
-                    season_df[column].notna().sum()
-                )
+                available_records = int(season_df[column].notna().sum())
             else:
                 available_records = 0
 
-            coverage_pct = (
-                available_records / total_records
-            ) * 100
+            coverage_pct = (available_records / total_records) * 100
 
             row[f"{column}_NON_NULL"] = available_records
             row[f"{column}_COVERAGE_PCT"] = round(

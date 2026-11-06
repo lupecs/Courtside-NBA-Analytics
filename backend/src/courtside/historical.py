@@ -14,13 +14,12 @@ from courtside.ingest import RAW_DATA_DIR, fetch_season, save_raw_data
 
 FIRST_NBA_SEASON = 1946
 
+
 def generate_seasons(start_year: int, end_year: int) -> list[str]:
     """Generate NBA season identifiers for an inclusive year range."""
 
     if start_year < FIRST_NBA_SEASON:
-        raise ValueError(
-            f"Start year cannot be earlier than {FIRST_NBA_SEASON}."
-        )
+        raise ValueError(f"Start year cannot be earlier than {FIRST_NBA_SEASON}.")
 
     if end_year < start_year:
         raise ValueError("End year cannot be earlier than start year.")
@@ -33,10 +32,12 @@ def generate_seasons(start_year: int, end_year: int) -> list[str]:
 
     return seasons
 
+
 def get_season_file_path(season: str) -> Path:
     """Return the expected raw CSV path for a season."""
 
     return RAW_DATA_DIR / f"nba_team_game_logs_{season}.csv"
+
 
 def is_season_downloaded(season: str) -> bool:
     """Check whether a season has a valid downloaded CSV."""
@@ -58,11 +59,13 @@ def is_season_downloaded(season: str) -> bool:
 
     except (OSError, pd.errors.ParserError, UnicodeDecodeError):
         return False
+
+
 def collect_historical_data(
-        start_year: int,
-        end_year: int,
-        max_attempts: int = 3,
-        retry_delay: int = 5,
+    start_year: int,
+    end_year: int,
+    max_attempts: int = 3,
+    retry_delay: int = 5,
 ) -> dict:
     """Download historical NBA seasons, skipping existing files and retrying failed requests.
 
@@ -84,11 +87,7 @@ def collect_historical_data(
 
     seasons = generate_seasons(start_year, end_year)
 
-    results = {
-    "downloaded": [],
-    "skipped": [],
-    "failed": []
-}
+    results = {"downloaded": [], "skipped": [], "failed": []}
 
     total = len(seasons)
 
@@ -122,10 +121,12 @@ def collect_historical_data(
                 else:
                     print(f"Giving up on {season} after {max_attempts} attempts.")
 
-                    results["failed"].append({
-                        "season": season,
-                        "error": str(error),
-                    })
+                    results["failed"].append(
+                        {
+                            "season": season,
+                            "error": str(error),
+                        }
+                    )
 
     print("\nHistorical ingestion summary")
     print("----------------------------")
@@ -174,9 +175,7 @@ def process_historical_data() -> dict:
 
     PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    dataset_path = (
-        PROCESSED_DATA_DIR / "nba_historical_team_game_logs.csv"
-    )
+    dataset_path = PROCESSED_DATA_DIR / "nba_historical_team_game_logs.csv"
 
     historical_df.to_csv(dataset_path, index=False)
 
@@ -218,7 +217,8 @@ def main() -> None:
             print(f"{failure['season']}: {failure['error']}")
 
     if results["downloaded"] or results["skipped"]:
-         process_historical_data()
+        process_historical_data()
+
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,3 @@
-
 """Tests for NBA analytics functions."""
 
 import pandas as pd
@@ -133,6 +132,7 @@ def test_rejects_missing_season_column(sample_game_logs):
     with pytest.raises(ValueError, match="Missing required column"):
         calculate_season_summary(df)
 
+
 def test_compares_two_seasons(sample_game_logs):
     df = pd.concat(
         [
@@ -146,9 +146,7 @@ def test_compares_two_seasons(sample_game_logs):
 
     assert len(comparison) == 5
 
-    team_points = comparison.loc[
-        comparison["METRIC"] == "AVG_TEAM_PTS"
-    ].iloc[0]
+    team_points = comparison.loc[comparison["METRIC"] == "AVG_TEAM_PTS"].iloc[0]
 
     assert team_points["VALUE_A"] == 102.5
     assert team_points["VALUE_B"] == 102.5
@@ -164,6 +162,7 @@ def test_rejects_comparing_same_season(sample_game_logs):
 def test_rejects_unknown_comparison_season(sample_game_logs):
     with pytest.raises(ValueError, match="No game data available"):
         compare_seasons(sample_game_logs, "2025-26", "2030-31")
+
 
 def test_calculates_era_adjusted_team_performance(sample_game_logs):
     performance = calculate_era_adjusted_team_performance(
@@ -186,6 +185,7 @@ def test_rejects_unknown_era_adjusted_season(sample_game_logs):
             sample_game_logs,
             "2030-31",
         )
+
 
 def test_calculates_era_adjusted_defensive_performance(
     sample_game_logs,

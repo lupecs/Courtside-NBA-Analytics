@@ -20,23 +20,28 @@ def test_generate_seasons():
         "2024-25",
     ]
 
+
 def test_generate_seasons_includes_first_nba_season():
     seasons = generate_seasons(1946, 1948)
 
     assert seasons == ["1946-47", "1947-48", "1948-49"]
 
+
 def test_generate_seasons_rejects_year_before_nba():
     with pytest.raises(ValueError):
         generate_seasons(1945, 1950)
+
 
 def test_generate_seasons_rejects_invalid_range():
     with pytest.raises(ValueError):
         generate_seasons(2025, 2020)
 
+
 def test_get_season_file_path():
     path = get_season_file_path("2024-25")
 
     assert path.name == "nba_team_game_logs_2024-25.csv"
+
 
 def test_is_season_downloaded_returns_true_for_existing_file(tmp_path, monkeypatch):
     from courtside import historical
@@ -45,12 +50,12 @@ def test_is_season_downloaded_returns_true_for_existing_file(tmp_path, monkeypat
 
     file_path = tmp_path / "nba_team_game_logs_2024-25.csv"
     file_path.write_text(
-    "GAME_ID,TEAM_ID,GAME_DATE,PTS,SEASON\n"
-    "001,100,2024-10-22,110,2024-25",
-    encoding="utf-8",
-)
+        "GAME_ID,TEAM_ID,GAME_DATE,PTS,SEASON\n001,100,2024-10-22,110,2024-25",
+        encoding="utf-8",
+    )
 
     assert historical.is_season_downloaded("2024-25") is True
+
 
 def test_is_season_downloaded_returns_false_for_missing_file(tmp_path, monkeypatch):
     from courtside import historical
@@ -61,6 +66,7 @@ def test_is_season_downloaded_returns_false_for_missing_file(tmp_path, monkeypat
     file_path.write_text("", encoding="utf-8")
 
     assert historical.is_season_downloaded("2024-25") is False
+
 
 def test_is_season_downloaded_returns_false_for_empty_file(tmp_path, monkeypatch):
     from courtside import historical
@@ -78,21 +84,15 @@ def test_collect_historical_data_downloads_season(monkeypatch):
 
     saved = []
 
-    monkeypatch.setattr(
-        historical, "is_season_downloaded", lambda season: False
-    )
-    monkeypatch.setattr(
-        historical, "fetch_season", lambda season: f"data-{season}"
-    )
+    monkeypatch.setattr(historical, "is_season_downloaded", lambda season: False)
+    monkeypatch.setattr(historical, "fetch_season", lambda season: f"data-{season}")
     monkeypatch.setattr(
         historical,
         "save_raw_data",
         lambda df, season: saved.append(season),
     )
 
-    results = historical.collect_historical_data(
-        2020, 2020, retry_delay=0
-    )
+    results = historical.collect_historical_data(2020, 2020, retry_delay=0)
 
     assert results["downloaded"] == ["2020-21"]
     assert results["skipped"] == []
@@ -103,9 +103,7 @@ def test_collect_historical_data_downloads_season(monkeypatch):
 def test_collect_historical_data_skips_existing_season(monkeypatch):
     from courtside import historical
 
-    monkeypatch.setattr(
-        historical, "is_season_downloaded", lambda season: True
-    )
+    monkeypatch.setattr(historical, "is_season_downloaded", lambda season: True)
 
     def unexpected_fetch(season):
         raise AssertionError("Existing season should not be fetched.")
@@ -125,9 +123,7 @@ def test_collect_historical_data_retries_failed_request(monkeypatch):
     attempts = []
     waits = []
 
-    monkeypatch.setattr(
-        historical, "is_season_downloaded", lambda season: False
-    )
+    monkeypatch.setattr(historical, "is_season_downloaded", lambda season: False)
 
     def mock_fetch(season):
         attempts.append(season)
@@ -138,12 +134,8 @@ def test_collect_historical_data_retries_failed_request(monkeypatch):
         return f"data-{season}"
 
     monkeypatch.setattr(historical, "fetch_season", mock_fetch)
-    monkeypatch.setattr(
-        historical, "save_raw_data", lambda df, season: None
-    )
-    monkeypatch.setattr(
-        historical.time, "sleep", lambda seconds: waits.append(seconds)
-    )
+    monkeypatch.setattr(historical, "save_raw_data", lambda df, season: None)
+    monkeypatch.setattr(historical.time, "sleep", lambda seconds: waits.append(seconds))
 
     results = historical.collect_historical_data(
         2020, 2020, max_attempts=3, retry_delay=5
@@ -158,9 +150,7 @@ def test_collect_historical_data_retries_failed_request(monkeypatch):
 def test_collect_historical_data_continues_after_failure(monkeypatch):
     from courtside import historical
 
-    monkeypatch.setattr(
-        historical, "is_season_downloaded", lambda season: False
-    )
+    monkeypatch.setattr(historical, "is_season_downloaded", lambda season: False)
 
     def mock_fetch(season):
         if season == "2020-21":
@@ -169,9 +159,7 @@ def test_collect_historical_data_continues_after_failure(monkeypatch):
         return f"data-{season}"
 
     monkeypatch.setattr(historical, "fetch_season", mock_fetch)
-    monkeypatch.setattr(
-        historical, "save_raw_data", lambda df, season: None
-    )
+    monkeypatch.setattr(historical, "save_raw_data", lambda df, season: None)
     monkeypatch.setattr(historical.time, "sleep", lambda seconds: None)
 
     results = historical.collect_historical_data(
@@ -186,14 +174,10 @@ def test_collect_historical_data_rejects_invalid_retry_settings():
     from courtside import historical
 
     with pytest.raises(ValueError):
-        historical.collect_historical_data(
-            2020, 2020, max_attempts=0
-        )
+        historical.collect_historical_data(2020, 2020, max_attempts=0)
 
     with pytest.raises(ValueError):
-        historical.collect_historical_data(
-            2020, 2020, retry_delay=-1
-        )
+        historical.collect_historical_data(2020, 2020, retry_delay=-1)
 
 
 def test_load_historical_data_combines_seasons(tmp_path, monkeypatch):
@@ -201,21 +185,25 @@ def test_load_historical_data_combines_seasons(tmp_path, monkeypatch):
 
     monkeypatch.setattr(historical, "RAW_DATA_DIR", tmp_path)
 
-    first_season = pd.DataFrame({
-        "SEASON": ["2020-21"],
-        "GAME_ID": ["001"],
-        "TEAM_ID": [100],
-        "GAME_DATE": ["2021-01-01"],
-        "PTS": [110],
-    })
+    first_season = pd.DataFrame(
+        {
+            "SEASON": ["2020-21"],
+            "GAME_ID": ["001"],
+            "TEAM_ID": [100],
+            "GAME_DATE": ["2021-01-01"],
+            "PTS": [110],
+        }
+    )
 
-    second_season = pd.DataFrame({
-        "SEASON": ["2021-22"],
-        "GAME_ID": ["002"],
-        "TEAM_ID": [200],
-        "GAME_DATE": ["2022-01-01"],
-        "PTS": [105],
-    })
+    second_season = pd.DataFrame(
+        {
+            "SEASON": ["2021-22"],
+            "GAME_ID": ["002"],
+            "TEAM_ID": [200],
+            "GAME_DATE": ["2022-01-01"],
+            "PTS": [105],
+        }
+    )
 
     first_season.to_csv(
         tmp_path / "nba_team_game_logs_2020-21.csv",

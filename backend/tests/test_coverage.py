@@ -21,7 +21,7 @@ def make_game_logs() -> pd.DataFrame:
                 "FGM": 10,
                 "AST": 20,
             },
-             {
+            {
                 "SEASON": "1946-47",
                 "GAME_ID": "G001",
                 "TEAM_ID": 2,
@@ -48,6 +48,7 @@ def make_game_logs() -> pd.DataFrame:
         ]
     )
 
+
 def test_coverage_report_counts_games_and_teams():
     df = make_game_logs()
 
@@ -58,6 +59,7 @@ def test_coverage_report_counts_games_and_teams():
     assert historical["RECORDS"] == 2
     assert historical["GAMES"] == 1
     assert historical["TEAMS"] == 2
+
 
 def test_coverage_report_calculates_statistics_correctly():
     df = make_game_logs()
@@ -72,6 +74,7 @@ def test_coverage_report_calculates_statistics_correctly():
     assert historical["FGM_NON_NULL"] == 2
     assert historical["FGM_COVERAGE_PCT"] == 100.0
 
+
 def test_coverage_report_handles_multiple_seasons():
     df = make_game_logs()
 
@@ -79,6 +82,7 @@ def test_coverage_report_handles_multiple_seasons():
 
     assert len(report) == 2
     assert report["SEASON"].tolist() == ["1946-47", "2024-25"]
+
 
 def test_coverage_report_handles_missing_optional_columns():
     df = make_game_logs().drop(columns=["FGM", "AST"])
@@ -90,11 +94,13 @@ def test_coverage_report_handles_missing_optional_columns():
     assert historical["FGM_NON_NULL"] == 0
     assert historical["FGM_COVERAGE_PCT"] == 0.0
 
+
 def test_coverage_report_rejects_empty_data():
     df = pd.DataFrame()
 
     with pytest.raises(ValueError, match="empty data"):
         build_coverage_report(df)
+
 
 def test_coverage_report_rejects_missing_required_columns():
     df = make_game_logs().drop(columns=["GAME_ID"])
@@ -108,9 +114,7 @@ def test_coverage_report_converts_dates():
 
     report = build_coverage_report(df)
 
-    assert pd.api.types.is_datetime64_any_dtype(
-        report["START_DATE"]
-    )
+    assert pd.api.types.is_datetime64_any_dtype(report["START_DATE"])
 
 
 def test_coverage_report_rejects_invalid_dates():

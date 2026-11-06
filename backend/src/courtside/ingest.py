@@ -1,4 +1,3 @@
-
 """Download and validate historical NBA team game logs."""
 
 from pathlib import Path
@@ -54,9 +53,7 @@ def validate_game_logs(
     missing = CORE_COLUMNS.difference(df.columns)
 
     if missing:
-        raise ValueError(
-            f"Missing essential columns for {season}: {sorted(missing)}"
-        )
+        raise ValueError(f"Missing essential columns for {season}: {sorted(missing)}")
 
     df = df.copy()
 
@@ -86,9 +83,7 @@ def validate_game_logs(
     if not df["WL"].isin(["W", "L"]).all():
         raise ValueError("Unexpected game outcome values.")
 
-    return df.sort_values(
-        ["GAME_DATE", "GAME_ID", "TEAM_ID"]
-    ).reset_index(drop=True)
+    return df.sort_values(["GAME_DATE", "GAME_ID", "TEAM_ID"]).reset_index(drop=True)
 
 
 def fetch_season(season: str = "2024-25") -> pd.DataFrame:
