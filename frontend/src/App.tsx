@@ -17,9 +17,11 @@ import {
   getAvailableSeasons,
   getSeasonSummaries,
   getTeamPerformance,
+  compareSeasons,
   type AvailableSeasonsResponse,
   type SeasonSummary,
   type TeamPerformance,
+  type SeasonComparison,
 } from "./api";
 
 import "./App.css";
@@ -60,6 +62,13 @@ function App() {
   const [teamPerformance, setTeamPerformance] = useState<TeamPerformance[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(false);
   const [teamsError, setTeamsError] = useState<string | null>(null);
+  const [comparisonSeasonA, setComparisonSeasonA] = useState("1946-47");
+  const [comparisonSeasonB, setComparisonSeasonB] = useState("2025-26");
+  const [seasonComparison, setSeasonComparison] = useState<SeasonComparison[]>(
+    [],
+  );
+  const [comparisonLoading, setComparisonLoading] = useState(false);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -134,6 +143,44 @@ function App() {
       cancelled = true;
     };
   }, [selectedSeason]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSeasonComparison() {
+      try {
+        setComparisonLoading(true);
+        setComparisonError(null);
+
+        const comparison = await compareSeasons(
+          comparisonSeasonA,
+          comparisonSeasonB,
+        );
+
+        if (!cancelled) {
+          setSeasonComparison(comparison);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setComparisonError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load season comparison.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setComparisonLoading(false);
+        }
+      }
+    }
+
+    loadSeasonComparison();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [comparisonSeasonA, comparisonSeasonB]);
 
   const quickLinks = [
     {
@@ -464,6 +511,124 @@ function App() {
                 </div>
               </section>
             </>
+          ) : activePage === "Season Comparison" ? (
+            <section className="panel performance-panel">
+              <div className="panel-heading performance-heading">
+                <div>
+                  <p className="eyebrow">HISTORICAL ANALYTICS</p>
+                  <h2>Season Comparison</h2>
+                  <p className="page-description">
+                    Compare NBA seasons across different eras.
+                  </p>
+                </div>
+
+                <div className="comparison-selectors">
+                  <div className="season-select-control">
+                    <label htmlFor="comparison-season-a">SEASON A</label>
+                    <select
+                      id="comparison-season-a"
+                      value={comparisonSeasonA}
+                      onChange={(event) =>
+                        setComparisonSeasonA(event.target.value)
+                      }
+                    >
+                      {availableSeasons?.seasons.map((season) => (
+                        <option key={season} value={season}>
+                          {season}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <span className="comparison-vs">VS</span>
+
+                  <div className="season-select-control">
+                    <label htmlFor="comparison-season-b">SEASON B</label>
+                    <select
+                      id="comparison-season-b"
+                      value={comparisonSeasonB}
+                      onChange={(event) =>
+                        setComparisonSeasonB(event.target.value)
+                      }
+                    >
+                      {availableSeasons?.seasons.map((season) => (
+                        <option key={season} value={season}>
+                          {season}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {comparisonLoading ? (
+                <div className="empty-state">Comparing seasons...</div>
+              ) : comparisonError ? (
+                <div className="empty-state" role="alert">
+                  Unable to compare seasons: {comparisonError}
+                </div>
+              ) : seasonComparison.length === 0 ? (
+                <div className="empty-state">No comparison data available.</div>
+              ) : (
+                <div className="comparison-grid">
+                  {seasonComparison.map((metric) => {
+                    const isPercentage = metric.METRIC === "BEST_TEAM_WIN_PCT";
+                    const valueA = isPercentage
+                      ? `${(metric.VALUE_A * 100).toFixed(1)}%`
+                      : metric.METRIC.includes("PTS")
+                        ? metric.VALUE_A.toFixed(1)
+                        : metric.VALUE_A.toLocaleString();
+
+                    const valueB = isPercentage
+                      ? `${(metric.VALUE_B * 100).toFixed(1)}%`
+                      : metric.METRIC.includes("PTS")
+                        ? metric.VALUE_B.toFixed(1)
+                        : metric.VALUE_B.toLocaleString();
+
+                    return (
+                      <div className="comparison-card" key={metric.METRIC}>
+                        <p className="eyebrow">
+                          {metric.METRIC.replaceAll("_", " ")}
+                        </p>
+
+                        <div className="comparison-values">
+                          <div>
+                            <span>{comparisonSeasonA}</span>
+                            <strong>{valueA}</strong>
+                          </div>
+                          <span className="comparison-divider">VS</span>
+                          <div>
+                            <span>{comparisonSeasonB}</span>
+                            <strong>{valueB}</strong>
+                          </div>
+                        </div>
+
+                        <div className="comparison-difference">
+                          <span>
+                            Difference: {metric.DIFFERENCE.toFixed(2)}
+                          </span>
+                          <strong
+                            className={
+                              metric.PCT_CHANGE === null
+                                ? ""
+                                : metric.PCT_CHANGE > 0
+                                  ? "point-diff-positive"
+                                  : metric.PCT_CHANGE < 0
+                                    ? "point-diff-negative"
+                                    : ""
+                            }
+                          >
+                            {metric.PCT_CHANGE === null
+                              ? "N/A"
+                              : `${metric.PCT_CHANGE > 0 ? "+" : ""}${metric.PCT_CHANGE.toFixed(2)}%`}
+                          </strong>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           ) : activePage === "Season Explorer" ? (
             <section className="panel performance-panel">
               <div className="panel-heading performance-heading">

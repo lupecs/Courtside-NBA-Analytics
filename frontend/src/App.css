@@ -793,6 +793,119 @@
   }
 }
 
+/* Season Comparison */
+
+.comparison-selectors {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.comparison-vs {
+  color: #f0a45b;
+  font-size: 11px;
+  font-weight: 800;
+  padding-bottom: 12px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 26px;
+}
+
+.comparison-card {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 0;
+}
+
+.comparison-card .eyebrow {
+  margin-bottom: 20px;
+}
+
+.comparison-values {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.comparison-values > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.comparison-values > div:last-child {
+  text-align: right;
+}
+
+.comparison-values span {
+  color: #9ba9bb;
+  font-size: 11px;
+}
+
+.comparison-values strong {
+  color: #f1f4f8;
+  font-size: 25px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.comparison-values .comparison-divider {
+  color: #f0a45b;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.comparison-difference {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 20px;
+  padding-top: 15px;
+}
+
+.comparison-difference span {
+  color: #9ba9bb;
+  font-size: 11px;
+}
+
+.comparison-difference strong {
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 800px) {
+  .comparison-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .comparison-selectors {
+    width: 100%;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .comparison-selectors .season-select-control {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .comparison-values strong {
+    font-size: 20px;
+  }
+}
+
 /* =========================================
    PAGE FOOTER
 ========================================= */

@@ -31,6 +31,16 @@ export interface TeamPerformance {
   SEASON: string;
 }
 
+export interface SeasonComparison {
+  METRIC: string;
+  SEASON_A: string;
+  VALUE_A: number;
+  SEASON_B: string;
+  VALUE_B: number;
+  DIFFERENCE: number;
+  PCT_CHANGE: number | null;
+}
+
 async function apiGet<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
 
@@ -52,7 +62,11 @@ export function getSeasonSummaries() {
 }
 
 export function getTeamPerformance(season: string) {
-  return apiGet<TeamPerformance[]>(
-    `/seasons/${season}/teams`,
+  return apiGet<TeamPerformance[]>(`/seasons/${season}/teams`);
+}
+
+export function compareSeasons(seasonA: string, seasonB: string) {
+  return apiGet<SeasonComparison[]>(
+    `/seasons/compare?season_a=${encodeURIComponent(seasonA)}&season_b=${encodeURIComponent(seasonB)}`,
   );
 }
