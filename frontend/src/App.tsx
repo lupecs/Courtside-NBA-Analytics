@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import Plot from "react-plotly.js";
+
 import {
   Activity,
   Bell,
@@ -9,6 +12,14 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
+
+import {
+  getAvailableSeasons,
+  getSeasonSummaries,
+  type AvailableSeasonsResponse,
+  type SeasonSummary,
+} from "./api";
+
 import "./App.css";
 
 const navigation = [
@@ -36,6 +47,52 @@ function App() {
   const [activePage, setActivePage] = useState("Overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [availableSeasons, setAvailableSeasons] =
+    useState<AvailableSeasonsResponse | null>(null);
+  const [seasonSummaries, setSeasonSummaries] = useState<
+    SeasonSummary[] | null
+  >(null);
+  const [dashboardLoading, setDashboardLoading] = useState(true);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDashboard() {
+      try {
+        setDashboardLoading(true);
+        setDashboardError(null);
+
+        const [seasons, summaries] = await Promise.all([
+          getAvailableSeasons(),
+          getSeasonSummaries(),
+        ]);
+
+        if (!cancelled) {
+          setAvailableSeasons(seasons);
+          setSeasonSummaries(summaries);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setDashboardError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load dashboard data.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setDashboardLoading(false);
+        }
+      }
+    }
+
+    loadDashboard();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const quickLinks = [
     {
@@ -54,6 +111,17 @@ function App() {
       image: "/icons/era-analysis.png",
     },
   ];
+
+  const totalGames =
+    seasonSummaries?.reduce((total, season) => total + season.TOTAL_GAMES, 0) ??
+    0;
+
+  const largestSeasonTeamCount = Math.max(
+    ...(seasonSummaries?.map((season) => season.TEAM_COUNT) ?? [0]),
+  );
+
+  const latestSeason =
+    availableSeasons?.seasons[availableSeasons.seasons.length - 1] ?? "—";
 
   return (
     <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
@@ -183,28 +251,42 @@ function App() {
               <section className="stats-grid">
                 <div className="stat-card">
                   <span className="stat-label">SEASONS AVAILABLE</span>
-                  <strong>—</strong>
-                  <small>Loading historical coverage</small>
+                  <strong>
+                    {dashboardLoading ? "—" : (availableSeasons?.count ?? "—")}
+                  </strong>
+                  <small>Historical seasons loaded</small>
                 </div>
 
                 <div className="stat-card">
                   <span className="stat-label">GAMES ANALYZED</span>
-                  <strong>—</strong>
+                  <strong>
+                    {dashboardLoading
+                      ? "—"
+                      : totalGames.toLocaleString("en-US")}
+                  </strong>
                   <small>Across available seasons</small>
                 </div>
 
                 <div className="stat-card">
-                  <span className="stat-label">TEAMS TRACKED</span>
-                  <strong>—</strong>
-                  <small>Historical NBA teams</small>
+                  <span className="stat-label">TEAMS IN LARGEST SEASON</span>
+                  <strong>
+                    {dashboardLoading ? "—" : largestSeasonTeamCount || "—"}
+                  </strong>
+                  <small>Teams in a single season</small>
                 </div>
 
                 <div className="stat-card">
-                  <span className="stat-label">DATA COVERAGE</span>
-                  <strong>—</strong>
-                  <small>Based on available records</small>
+                  <span className="stat-label">LATEST SEASON</span>
+                  <strong>{dashboardLoading ? "—" : latestSeason}</strong>
+                  <small>Most recent season available</small>
                 </div>
               </section>
+
+              {dashboardError && (
+                <p className="page-description" role="alert">
+                  Unable to load dashboard data: {dashboardError}
+                </p>
+              )}
 
               <section className="dashboard-grid">
                 <div className="panel chart-panel">
@@ -217,12 +299,73 @@ function App() {
                     <span className="panel-tag">HISTORICAL</span>
                   </div>
 
-                  <div className="chart-placeholder">
-                    <Activity size={34} />
-                    <strong>Scoring trends will appear here</strong>
-                    <span>
-                      Connect the historical analytics API to load real data.
-                    </span>
+                  <div className="chart-visualization">
+                    {dashboardLoading ? (
+                      <div className="chart-placeholder">
+                        <Activity size={34} />
+                        <strong>Loading scoring data...</strong>
+                      </div>
+                    ) : seasonSummaries && seasonSummaries.length > 0 ? (
+                      <Plot
+                        data={[
+                          {
+                            type: "scatter",
+                            mode: "lines+markers",
+                            x: seasonSummaries.map((season) => season.SEASON),
+                            y: seasonSummaries.map(
+                              (season) => season.AVG_TEAM_PTS,
+                            ),
+                            name: "Average team points",
+                            line: {
+                              color: "#f0a45b",
+                              width: 3,
+                            },
+                            marker: {
+                              size: 9,
+                            },
+                          },
+                        ]}
+                        layout={{
+                          autosize: true,
+                          paper_bgcolor: "rgba(0,0,0,0)",
+                          plot_bgcolor: "rgba(0,0,0,0)",
+                          font: {
+                            color: "#dce3ed",
+                            family: "DM Sans, sans-serif",
+                          },
+                          margin: {
+                            l: 55,
+                            r: 20,
+                            t: 20,
+                            b: 55,
+                          },
+                          xaxis: {
+                            title: { text: "NBA Season" },
+                            gridcolor: "rgba(255,255,255,0.08)",
+                            zeroline: false,
+                          },
+                          yaxis: {
+                            title: { text: "Average Points per Team" },
+                            gridcolor: "rgba(255,255,255,0.08)",
+                            zeroline: false,
+                          },
+                          showlegend: false,
+                        }}
+                        config={{
+                          responsive: true,
+                          displayModeBar: false,
+                        }}
+                        useResizeHandler
+                        style={{
+                          width: "100%",
+                          height: "360px",
+                        }}
+                      />
+                    ) : (
+                      <div className="chart-placeholder">
+                        <strong>No scoring data available.</strong>
+                      </div>
+                    )}
                   </div>
                 </div>
 

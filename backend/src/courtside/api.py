@@ -1,6 +1,7 @@
 """FastAPI application for the Courtside analytics platform."""
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from courtside.analytics import (
     calculate_era_adjusted_team_performance,
@@ -14,6 +15,17 @@ app = FastAPI(
     title="Courtside NBA Analytics API",
     description="Historical NBA analytics and team performance.",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Load historical NBA data when the API starts.
