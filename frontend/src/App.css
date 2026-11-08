@@ -669,6 +669,130 @@
   line-height: 1.7;
 }
 
+/* Season Explorer */
+
+.performance-heading {
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.season-select-control {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 150px;
+}
+
+.season-select-control label {
+  color: #9ba9bb;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+}
+
+.season-select-control select {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  color: #f1f4f8;
+  padding: 10px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.season-select-control select:focus {
+  outline: 2px solid #f0a45b;
+  outline-offset: 2px;
+}
+
+.season-select-control option {
+  background: #172235;
+  color: #f1f4f8;
+}
+
+.standings-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #9ba9bb;
+  font-size: 12px;
+  margin: 24px 0 14px;
+}
+
+.standings-summary strong {
+  color: #f0a45b;
+}
+
+.standings-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.standings-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+  font-size: 13px;
+  text-align: right;
+}
+
+.standings-table th {
+  color: #9ba9bb;
+  font-size: 10px;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.standings-table td {
+  color: #dce3ed;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-variant-numeric: tabular-nums;
+}
+
+.standings-table th:nth-child(2),
+.standings-table td:nth-child(2) {
+  text-align: left;
+}
+
+.standings-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.standings-rank {
+  color: #8997aa !important;
+}
+
+.standings-team {
+  color: #f1f4f8 !important;
+  font-weight: 600;
+  min-width: 190px;
+}
+
+.point-diff-positive {
+  color: #8bd3ae !important;
+  font-weight: 600;
+}
+
+.point-diff-negative {
+  color: #e88f91 !important;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .performance-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .season-select-control {
+    width: 100%;
+  }
+}
+
 /* =========================================
    PAGE FOOTER
 ========================================= */

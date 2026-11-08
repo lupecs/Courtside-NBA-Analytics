@@ -16,8 +16,10 @@ import {
 import {
   getAvailableSeasons,
   getSeasonSummaries,
+  getTeamPerformance,
   type AvailableSeasonsResponse,
   type SeasonSummary,
+  type TeamPerformance,
 } from "./api";
 
 import "./App.css";
@@ -54,6 +56,10 @@ function App() {
   >(null);
   const [dashboardLoading, setDashboardLoading] = useState(true);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
+  const [selectedSeason, setSelectedSeason] = useState("2025-26");
+  const [teamPerformance, setTeamPerformance] = useState<TeamPerformance[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(false);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,6 +99,41 @@ function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTeamPerformance() {
+      try {
+        setTeamsLoading(true);
+        setTeamsError(null);
+
+        const teams = await getTeamPerformance(selectedSeason);
+
+        if (!cancelled) {
+          setTeamPerformance(teams);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setTeamsError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load team performance.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setTeamsLoading(false);
+        }
+      }
+    }
+
+    loadTeamPerformance();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedSeason]);
 
   const quickLinks = [
     {
@@ -423,6 +464,102 @@ function App() {
                 </div>
               </section>
             </>
+          ) : activePage === "Season Explorer" ? (
+            <section className="panel performance-panel">
+              <div className="panel-heading performance-heading">
+                <div>
+                  <p className="eyebrow">TEAM ANALYTICS</p>
+                  <h2>Season Standings</h2>
+                  <p className="page-description">
+                    Explore team performance throughout NBA history.
+                  </p>
+                </div>
+
+                <div className="season-select-control">
+                  <label htmlFor="season-select">SELECT SEASON</label>
+                  <select
+                    id="season-select"
+                    value={selectedSeason}
+                    onChange={(event) => setSelectedSeason(event.target.value)}
+                    disabled={dashboardLoading || !availableSeasons}
+                  >
+                    {availableSeasons?.seasons.map((season) => (
+                      <option key={season} value={season}>
+                        {season}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="standings-summary">
+                <span>
+                  <strong>{selectedSeason}</strong> Regular Season
+                </span>
+                <span>
+                  {teamsLoading
+                    ? "Loading standings..."
+                    : `${teamPerformance.length} teams`}
+                </span>
+              </div>
+
+              {teamsLoading ? (
+                <div className="empty-state">Loading team performance...</div>
+              ) : teamsError ? (
+                <div className="empty-state" role="alert">
+                  Unable to load standings: {teamsError}
+                </div>
+              ) : teamPerformance.length === 0 ? (
+                <div className="empty-state">
+                  No team performance data available for this season.
+                </div>
+              ) : (
+                <div className="standings-table-wrapper">
+                  <table className="standings-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>TEAM</th>
+                        <th>GP</th>
+                        <th>W</th>
+                        <th>L</th>
+                        <th>WIN %</th>
+                        <th>PTS/G</th>
+                        <th>PA/G</th>
+                        <th>+/-</th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {teamPerformance.map((team, index) => (
+                        <tr key={team.TEAM_ID}>
+                          <td className="standings-rank">{index + 1}</td>
+                          <td className="standings-team">{team.TEAM_NAME}</td>
+                          <td>{team.GP}</td>
+                          <td>{team.W}</td>
+                          <td>{team.L}</td>
+                          <td>{(team.WIN_PCT * 100).toFixed(1)}%</td>
+                          <td>{team.PTS.toFixed(1)}</td>
+                          <td>{team.PTS_ALLOWED.toFixed(1)}</td>
+                          <td
+                            className={
+                              team.POINT_DIFF > 0
+                                ? "point-diff-positive"
+                                : team.POINT_DIFF < 0
+                                  ? "point-diff-negative"
+                                  : ""
+                            }
+                          >
+                            {team.POINT_DIFF > 0 ? "+" : ""}
+                            {team.POINT_DIFF.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
           ) : (
             <section className="panel section-placeholder">
               <div className="placeholder-icon">

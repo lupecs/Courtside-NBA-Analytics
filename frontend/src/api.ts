@@ -18,6 +18,19 @@ export interface SeasonSummary {
   BEST_TEAM_POINT_DIFF: number;
 }
 
+export interface TeamPerformance {
+  TEAM_ID: number;
+  TEAM_NAME: string;
+  GP: number;
+  W: number;
+  L: number;
+  PTS: number;
+  PTS_ALLOWED: number;
+  WIN_PCT: number;
+  POINT_DIFF: number;
+  SEASON: string;
+}
+
 async function apiGet<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
 
@@ -36,4 +49,10 @@ export function getAvailableSeasons() {
 
 export function getSeasonSummaries() {
   return apiGet<SeasonSummary[]>("/seasons/summary");
+}
+
+export function getTeamPerformance(season: string) {
+  return apiGet<TeamPerformance[]>(
+    `/seasons/${season}/teams`,
+  );
 }
