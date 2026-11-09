@@ -41,6 +41,16 @@ export interface SeasonComparison {
   PCT_CHANGE: number | null;
 }
 
+export interface EraAdjustedTeamPerformance extends TeamPerformance {
+  LEAGUE_AVG_PTS: number;
+  PTS_INDEX: number;
+  PTS_ABOVE_LEAGUE_AVG: number;
+  LEAGUE_AVG_PTS_ALLOWED: number;
+  DEF_INDEX: number;
+  PTS_PREVENTED_ABOVE_LEAGUE_AVG: number;
+  ERA_STRENGTH: number;
+}
+
 async function apiGet<T>(endpoint: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${endpoint}`);
 
@@ -68,5 +78,11 @@ export function getTeamPerformance(season: string) {
 export function compareSeasons(seasonA: string, seasonB: string) {
   return apiGet<SeasonComparison[]>(
     `/seasons/compare?season_a=${encodeURIComponent(seasonA)}&season_b=${encodeURIComponent(seasonB)}`,
+  );
+}
+
+export function getEraAdjustedTeamPerformance(season: string) {
+  return apiGet<EraAdjustedTeamPerformance[]>(
+    `/seasons/${encodeURIComponent(season)}/teams/era-adjusted`,
   );
 }
